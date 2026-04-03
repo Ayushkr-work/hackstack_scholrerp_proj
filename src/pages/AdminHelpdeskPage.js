@@ -7,102 +7,102 @@ import { useAuth } from '../context/AuthContext';
 import { getTickets, updateTicket, getStudents } from '../utils/mockData';
 
 const statusCfg = {
-  open:         { label: 'Open',        cls: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',  dot: 'bg-yellow-400' },
-  'in-progress':{ label: 'In Progress', cls: 'bg-blue-500/20 text-blue-400 border-blue-500/30',        dot: 'bg-blue-400'   },
-  resolved:     { label: 'Resolved',    cls: 'bg-green-500/20 text-green-400 border-green-500/30',     dot: 'bg-green-400'  },
+  open:          { label:'Open',        bg:'rgba(212,175,55,0.12)', color:'#B8960C', border:'rgba(212,175,55,0.28)', dot:'#D4AF37' },
+  'in-progress': { label:'In Progress', bg:'rgba(59,130,246,0.12)', color:'#2563EB', border:'rgba(59,130,246,0.28)', dot:'#3B82F6' },
+  resolved:      { label:'Resolved',    bg:'rgba(34,197,94,0.12)',  color:'#15803D', border:'rgba(34,197,94,0.28)',  dot:'#22C55E' },
 };
 
 const priorityCfg = {
-  low:    { cls: 'bg-white/10 text-white/50',          label: 'Low'    },
-  medium: { cls: 'bg-yellow-500/20 text-yellow-400',   label: 'Medium' },
-  high:   { cls: 'bg-red-500/20 text-red-400',         label: 'High'   },
+  low:    { bg:'var(--bg4)',                   color:'var(--text3)', label:'Low'    },
+  medium: { bg:'rgba(212,175,55,0.12)',         color:'#B8960C',     label:'Medium' },
+  high:   { bg:'rgba(239,68,68,0.12)',          color:'#DC2626',     label:'High'   },
 };
+
+const lbl = { color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 };
+const card = { background:'var(--bg3)', border:'1px solid var(--border2)', borderRadius:'16px', boxShadow:'var(--shadow)', overflow:'hidden' };
 
 export default function AdminHelpdeskPage() {
   const { user } = useAuth();
   const cid = user?.college_id;
   const myStudents = getStudents(cid);
 
-  const [tickets, setTickets]   = useState(() => getTickets().filter(t => t.college_id === cid));
-  const [expanded, setExpanded] = useState(null);
+  const [tickets, setTickets]       = useState(() => getTickets().filter(t => t.college_id === cid));
+  const [expanded, setExpanded]     = useState(null);
   const [replyModal, setReplyModal] = useState(null);
-  const [filter, setFilter]     = useState('all');
-  const [reply, setReply]       = useState('');
-  const [newStatus, setNewStatus] = useState('in-progress');
+  const [filter, setFilter]         = useState('all');
+  const [reply, setReply]           = useState('');
+  const [newStatus, setNewStatus]   = useState('in-progress');
 
   const refresh = () => setTickets(getTickets().filter(t => t.college_id === cid));
 
   const submitReply = () => {
     if (!reply.trim()) return;
-    updateTicket(replyModal.id, {
-      admin_reply: reply,
-      status: newStatus,
-      resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null,
-    });
-    refresh();
-    setReplyModal(null);
-    setReply('');
-    setNewStatus('in-progress');
+    updateTicket(replyModal.id, { admin_reply:reply, status:newStatus, resolved_at:newStatus==='resolved'?new Date().toISOString():null });
+    refresh(); setReplyModal(null); setReply(''); setNewStatus('in-progress');
   };
 
-  const markResolved = (id) => {
-    updateTicket(id, { status: 'resolved', resolved_at: new Date().toISOString() });
+  const markResolved = id => {
+    updateTicket(id, { status:'resolved', resolved_at:new Date().toISOString() });
     refresh();
   };
 
   const displayed = filter === 'all' ? tickets : tickets.filter(t => t.status === filter);
-
   const stats = {
     total:    tickets.length,
-    open:     tickets.filter(t => t.status === 'open').length,
-    progress: tickets.filter(t => t.status === 'in-progress').length,
-    resolved: tickets.filter(t => t.status === 'resolved').length,
+    open:     tickets.filter(t => t.status==='open').length,
+    progress: tickets.filter(t => t.status==='in-progress').length,
+    resolved: tickets.filter(t => t.status==='resolved').length,
   };
+
+  const statCards = [
+    { label:'Total Tickets', value:stats.total,    color:'var(--text1)', bg:'var(--bg3)'              },
+    { label:'Open',          value:stats.open,     color:'#B8960C',      bg:'rgba(212,175,55,0.10)'   },
+    { label:'In Progress',   value:stats.progress, color:'#2563EB',      bg:'rgba(59,130,246,0.10)'   },
+    { label:'Resolved',      value:stats.resolved, color:'#15803D',      bg:'rgba(34,197,94,0.10)'    },
+  ];
 
   return (
     <DashboardLayout>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-3">
-            <HeadphonesIcon size={26} className="text-cyan-400"/> Helpdesk
+          <h1 className="flex items-center gap-2.5" style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.4rem' }}>
+            <HeadphonesIcon size={24} style={{ color:'var(--p)' }}/> Helpdesk
           </h1>
-          <p className="text-white/40 text-sm mt-0.5">Manage and resolve student support tickets</p>
+          <p style={{ color:'var(--text3)', fontSize:'0.8rem' }} className="mt-0.5">Manage and resolve student support tickets</p>
         </div>
         {stats.open > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-            <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"/>
-            <span className="text-yellow-400 text-sm font-medium">{stats.open} open ticket{stats.open > 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
+            style={{ background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)' }}>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background:'#D4AF37' }}/>
+            <span style={{ color:'#B8960C', fontSize:'0.85rem', fontWeight:600 }}>
+              {stats.open} open ticket{stats.open > 1 ? 's' : ''}
+            </span>
           </div>
         )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Total Tickets', value: stats.total,    color: 'from-white/10 to-white/5',           tc: 'text-white'      },
-          { label: 'Open',          value: stats.open,     color: 'from-yellow-500/20 to-yellow-500/5',  tc: 'text-yellow-400' },
-          { label: 'In Progress',   value: stats.progress, color: 'from-blue-500/20 to-blue-500/5',      tc: 'text-blue-400'   },
-          { label: 'Resolved',      value: stats.resolved, color: 'from-green-500/20 to-green-500/5',    tc: 'text-green-400'  },
-        ].map(({ label, value, color, tc }, i) => (
-          <motion.div key={i} className={`glass rounded-2xl p-4 border border-white/5 bg-gradient-to-br ${color}`}
-            initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay: i*.06 }}>
-            <p className={`text-2xl font-black ${tc}`}>{value}</p>
-            <p className="text-white/40 text-xs mt-1">{label}</p>
+        {statCards.map(({ label, value, color, bg }, i) => (
+          <motion.div key={i} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*.06 }}
+            style={{ background:bg, border:'1px solid var(--border2)', borderRadius:'14px', padding:'1rem', boxShadow:'var(--shadow)' }}>
+            <p style={{ color, fontSize:'1.5rem', fontWeight:900 }}>{value}</p>
+            <p style={{ color:'var(--text3)', fontSize:'0.75rem', marginTop:'2px' }}>{label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        {['all', 'open', 'in-progress', 'resolved'].map(f => (
+        {['all','open','in-progress','resolved'].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize
-              ${filter === f ? 'btn-primary' : 'glass border border-white/10 text-white/50 hover:text-white'}`}>
-            {f === 'all' ? 'All Tickets' : f === 'in-progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
-            {f !== 'all' && (
-              <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs bg-white/10">
-                {f === 'open' ? stats.open : f === 'in-progress' ? stats.progress : stats.resolved}
+            className={filter===f ? 'btn-primary' : ''}
+            style={filter!==f ? { padding:'0.4rem 1rem', borderRadius:'10px', fontSize:'0.82rem', fontWeight:500, color:'var(--text2)', border:'1px solid var(--border2)', background:'var(--bg3)', cursor:'none' } : { fontSize:'0.82rem' }}>
+            {f==='all'?'All Tickets':f==='in-progress'?'In Progress':f.charAt(0).toUpperCase()+f.slice(1)}
+            {f!=='all' && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs"
+                style={{ background:'var(--bg4)', color:'var(--text3)' }}>
+                {f==='open'?stats.open:f==='in-progress'?stats.progress:stats.resolved}
               </span>
             )}
           </button>
@@ -111,10 +111,10 @@ export default function AdminHelpdeskPage() {
 
       {/* Ticket list */}
       {displayed.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center border border-white/5">
-          <HeadphonesIcon size={48} className="mx-auto mb-3 text-white/20"/>
-          <p className="text-white/30 font-medium">No tickets found</p>
-          <p className="text-white/20 text-sm mt-1">Student tickets will appear here</p>
+        <div className="rounded-2xl p-14 text-center" style={{ background:'var(--bg3)', border:'1px solid var(--border2)', boxShadow:'var(--shadow)' }}>
+          <HeadphonesIcon size={40} style={{ margin:'0 auto 12px', color:'var(--text4)' }}/>
+          <p style={{ color:'var(--text3)', fontWeight:500, fontSize:'0.9rem' }}>No tickets found</p>
+          <p style={{ color:'var(--text4)', fontSize:'0.8rem', marginTop:'4px' }}>Student tickets will appear here</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -123,76 +123,85 @@ export default function AdminHelpdeskPage() {
             const pc = priorityCfg[t.priority] || priorityCfg.medium;
             const isOpen = expanded === t.id;
             return (
-              <motion.div key={t.id} className={`glass rounded-2xl border overflow-hidden transition-all ${t.status==='open'?'border-yellow-500/20':'border-white/5'}`}
-                initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay: i*.04 }}>
-
-                {/* Ticket header */}
-                <button className="w-full text-left p-5 flex items-start gap-4 hover:bg-white/3 transition-colors"
+              <motion.div key={t.id} style={{ ...card, borderColor: t.status==='open'?'rgba(212,175,55,0.25)':'var(--border2)' }}
+                initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*.04 }}>
+                <button className="w-full text-left p-5 flex items-start gap-4 transition-colors"
+                  style={{ background:'transparent' }}
+                  onMouseEnter={e => e.currentTarget.style.background='rgba(34,197,94,0.03)'}
+                  onMouseLeave={e => e.currentTarget.style.background='transparent'}
                   onClick={() => setExpanded(isOpen ? null : t.id)}>
-                  {/* Priority indicator */}
-                  <div className={`w-1 self-stretch rounded-full shrink-0 ${t.priority==='high'?'bg-red-500':t.priority==='medium'?'bg-yellow-500':'bg-white/20'}`}/>
+                  {/* Priority bar */}
+                  <div className="w-1 self-stretch rounded-full shrink-0"
+                    style={{ background: t.priority==='high'?'#EF4444':t.priority==='medium'?'#D4AF37':'var(--border2)' }}/>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                      <span className="text-white/30 text-xs font-mono">#{t.id}</span>
-                      <p className="font-semibold text-white text-sm">{t.subject}</p>
+                      <span style={{ color:'var(--text4)', fontSize:'0.72rem', fontFamily:'monospace' }}>#{t.id}</span>
+                      <p style={{ color:'var(--text1)', fontWeight:600, fontSize:'0.875rem' }}>{t.subject}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${sc.cls}`}>
-                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${sc.dot} mr-1.5`}/>{sc.label}
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1"
+                        style={{ background:sc.bg, color:sc.color, border:`1px solid ${sc.border}` }}>
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background:sc.dot }}/>{sc.label}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${pc.cls}`}>{pc.label}</span>
-                      <span className="flex items-center gap-1 text-xs text-white/30"><Tag size={11}/>{t.category}</span>
-                      <span className="flex items-center gap-1 text-xs text-white/30"><User size={11}/>{t.student_name} ({t.roll_no})</span>
-                      <span className="text-xs text-white/20">{new Date(t.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={{ background:pc.bg, color:pc.color }}>{pc.label}</span>
+                      <span className="flex items-center gap-1" style={{ color:'var(--text4)', fontSize:'0.72rem' }}>
+                        <Tag size={10}/>{t.category}
+                      </span>
+                      <span className="flex items-center gap-1" style={{ color:'var(--text4)', fontSize:'0.72rem' }}>
+                        <User size={10}/>{t.student_name} ({t.roll_no})
+                      </span>
+                      <span style={{ color:'var(--text4)', fontSize:'0.72rem' }}>
+                        {new Date(t.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
+                      </span>
                     </div>
                   </div>
-                  <div className="shrink-0 text-white/30 mt-1">
-                    {isOpen ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                  <div style={{ color:'var(--text4)', flexShrink:0, marginTop:'2px' }}>
+                    {isOpen ? <ChevronUp size={17}/> : <ChevronDown size={17}/>}
                   </div>
                 </button>
 
-                {/* Expanded */}
                 <AnimatePresence>
                   {isOpen && (
                     <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }}
-                      exit={{ height:0, opacity:0 }} transition={{ duration:.25 }}
-                      className="overflow-hidden">
-                      <div className="px-5 pb-5 space-y-4 border-t border-white/10 pt-4">
-                        {/* Student description */}
+                      exit={{ height:0, opacity:0 }} transition={{ duration:.22 }} className="overflow-hidden">
+                      <div className="px-5 pb-5 space-y-4 pt-4" style={{ borderTop:'1px solid var(--border2)' }}>
                         <div>
-                          <p className="text-xs text-white/40 font-semibold uppercase tracking-wider mb-2">Student's Issue</p>
-                          <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-3 border border-white/10">{t.description}</p>
+                          <p style={{ color:'var(--text3)', fontSize:'0.7rem', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'8px' }}>Student's Issue</p>
+                          <p style={{ color:'var(--text2)', fontSize:'0.875rem', lineHeight:1.6, background:'var(--bg4)', borderRadius:'10px', padding:'0.75rem', border:'1px solid var(--border2)' }}>{t.description}</p>
                         </div>
-
-                        {/* Existing reply */}
                         {t.admin_reply && (
                           <div>
-                            <p className="text-xs text-cyan-400 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                              <MessageSquare size={12}/> Your Response
+                            <p className="flex items-center gap-1.5" style={{ color:'var(--p)', fontSize:'0.7rem', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'8px' }}>
+                              <MessageSquare size={11}/> Your Response
                             </p>
-                            <div className="bg-cyan-500/10 rounded-xl p-3 border border-cyan-500/20">
-                              <p className="text-white/80 text-sm leading-relaxed">{t.admin_reply}</p>
+                            <div style={{ background:'rgba(34,197,94,0.08)', borderRadius:'10px', padding:'0.75rem', border:'1px solid rgba(34,197,94,0.20)' }}>
+                              <p style={{ color:'var(--text1)', fontSize:'0.875rem', lineHeight:1.6 }}>{t.admin_reply}</p>
                             </div>
                           </div>
                         )}
-
-                        {/* Action buttons */}
                         <div className="flex items-center gap-3 flex-wrap pt-1">
                           {t.status !== 'resolved' && (
                             <>
-                              <button onClick={() => { setReplyModal(t); setNewStatus(t.status === 'open' ? 'in-progress' : t.status); }}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/20 transition-colors text-sm font-medium">
-                                <Send size={14}/> {t.admin_reply ? 'Update Reply' : 'Reply'}
+                              <button onClick={() => { setReplyModal(t); setNewStatus(t.status==='open'?'in-progress':t.status); }}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                                style={{ background:'rgba(34,197,94,0.10)', color:'#15803D', border:'1px solid rgba(34,197,94,0.25)' }}
+                                onMouseEnter={e => e.currentTarget.style.background='rgba(34,197,94,0.18)'}
+                                onMouseLeave={e => e.currentTarget.style.background='rgba(34,197,94,0.10)'}>
+                                <Send size={13}/> {t.admin_reply ? 'Update Reply' : 'Reply'}
                               </button>
                               <button onClick={() => markResolved(t.id)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20 transition-colors text-sm font-medium">
-                                <CheckCircle size={14}/> Mark Resolved
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                                style={{ background:'rgba(34,197,94,0.10)', color:'#15803D', border:'1px solid rgba(34,197,94,0.25)' }}
+                                onMouseEnter={e => e.currentTarget.style.background='rgba(34,197,94,0.18)'}
+                                onMouseLeave={e => e.currentTarget.style.background='rgba(34,197,94,0.10)'}>
+                                <CheckCircle size={13}/> Mark Resolved
                               </button>
                             </>
                           )}
                           {t.status === 'resolved' && (
-                            <div className="flex items-center gap-2 text-green-400 text-sm">
-                              <CheckCircle size={16}/>
+                            <div className="flex items-center gap-2 text-sm" style={{ color:'#15803D' }}>
+                              <CheckCircle size={15}/>
                               Resolved on {new Date(t.resolved_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
                             </div>
                           )}
@@ -208,47 +217,41 @@ export default function AdminHelpdeskPage() {
       )}
 
       {/* Reply Modal */}
-      <Modal open={!!replyModal} onClose={() => { setReplyModal(null); setReply(''); }} title="Reply to Ticket" size="md">
+      <Modal open={!!replyModal} onClose={() => { setReplyModal(null); setReply(''); }} title="Reply to Ticket">
         {replyModal && (
           <div className="space-y-4">
-            {/* Ticket info */}
-            <div className="glass rounded-xl p-4 border border-white/10">
-              <p className="text-xs text-white/40 mb-1">Ticket #{replyModal.id} — {replyModal.student_name}</p>
-              <p className="text-white font-semibold text-sm">{replyModal.subject}</p>
-              <p className="text-white/50 text-xs mt-1 line-clamp-2">{replyModal.description}</p>
+            <div className="rounded-xl p-4" style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}>
+              <p style={{ color:'var(--text3)', fontSize:'0.72rem', marginBottom:'4px' }}>Ticket #{replyModal.id} — {replyModal.student_name}</p>
+              <p style={{ color:'var(--text1)', fontWeight:600, fontSize:'0.875rem' }}>{replyModal.subject}</p>
+              <p style={{ color:'var(--text3)', fontSize:'0.78rem', marginTop:'4px' }} className="line-clamp-2">{replyModal.description}</p>
             </div>
-
-            {/* Status update */}
             <div>
-              <label className="text-xs text-white/50 font-medium mb-1.5 block">Update Status</label>
+              <label className="block mb-1.5" style={lbl}>Update Status</label>
               <div className="flex gap-2">
-                {['in-progress', 'resolved'].map(s => (
+                {['in-progress','resolved'].map(s => (
                   <button key={s} onClick={() => setNewStatus(s)}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all capitalize
-                      ${newStatus === s
-                        ? s === 'resolved' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                        : 'bg-white/5 text-white/40 border-white/10 hover:text-white'}`}>
-                    {s === 'in-progress' ? 'In Progress' : 'Resolved'}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all capitalize"
+                    style={newStatus===s
+                      ? s==='resolved'
+                        ? { background:'rgba(34,197,94,0.15)', color:'#15803D', border:'1px solid rgba(34,197,94,0.30)' }
+                        : { background:'rgba(59,130,246,0.15)', color:'#2563EB', border:'1px solid rgba(59,130,246,0.30)' }
+                      : { background:'var(--bg4)', color:'var(--text3)', border:'1px solid var(--border2)', cursor:'none' }}>
+                    {s==='in-progress'?'In Progress':'Resolved'}
                   </button>
                 ))}
               </div>
             </div>
-
-            {/* Reply text */}
             <div>
-              <label className="text-xs text-white/50 font-medium mb-1.5 block">Your Reply *</label>
+              <label className="block mb-1.5" style={lbl}>Your Reply *</label>
               <textarea className="input-dark resize-none" rows={5}
                 placeholder="Type your response to the student..."
-                value={reply}
-                onChange={e => setReply(e.target.value)}
-                defaultValue={replyModal.admin_reply}
-              />
+                value={reply} onChange={e => setReply(e.target.value)}
+                defaultValue={replyModal.admin_reply}/>
             </div>
-
             <button onClick={submitReply} disabled={!reply.trim()}
               className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">
-              <Send size={16}/>
-              {newStatus === 'resolved' ? 'Reply & Mark Resolved' : 'Send Reply'}
+              <Send size={15}/>
+              {newStatus==='resolved' ? 'Reply & Mark Resolved' : 'Send Reply'}
             </button>
           </div>
         )}

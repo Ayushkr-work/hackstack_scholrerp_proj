@@ -5,180 +5,176 @@ import { Mail, ArrowLeft, KeyRound, Copy, CheckCircle, ExternalLink } from 'luci
 import { createResetToken } from '../utils/mockData';
 import emailjs from 'emailjs-com';
 
+const lbl = { color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 };
+
 export default function ForgotPassword() {
-  const [email, setEmail]     = useState('');
-  const [step, setStep]       = useState('form'); // form | sent
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [email, setEmail]         = useState('');
+  const [step, setStep]           = useState('form');
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState('');
   const [resetData, setResetData] = useState(null);
-  const [copied, setCopied]   = useState(false);
+  const [copied, setCopied]       = useState(false);
   const navigate = useNavigate();
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setError(''); setLoading(true);
-
+  const submit = async e => {
+    e.preventDefault(); setError(''); setLoading(true);
     const result = createResetToken(email.trim().toLowerCase());
     if (!result.success) { setError(result.message); setLoading(false); return; }
-
     const resetLink = `${window.location.origin}/reset-password?token=${result.token}`;
     setResetData({ ...result, resetLink });
-
-    // Try to send real email via EmailJS (optional - works if configured)
     try {
-      await emailjs.send(
-        'service_eduverse',   // EmailJS service ID
-        'template_reset',     // EmailJS template ID
-        {
-          to_email:    result.email,
-          to_name:     result.studentName,
-          reset_link:  resetLink,
-          expiry_time: '15 minutes',
-        },
-        'YOUR_EMAILJS_PUBLIC_KEY' // Replace with your EmailJS public key
+      await emailjs.send('service_eduverse','template_reset',
+        { to_email:result.email, to_name:result.studentName, reset_link:resetLink, expiry_time:'15 minutes' },
+        'YOUR_EMAILJS_PUBLIC_KEY'
       );
-    } catch {
-      // EmailJS not configured — show link directly (demo mode)
-    }
-
-    setLoading(false);
-    setStep('sent');
+    } catch {}
+    setLoading(false); setStep('sent');
   };
 
   const copyLink = () => {
     navigator.clipboard.writeText(resetData.resetLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-dark-900 flex items-center justify-center px-6 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-neon-blue/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"/>
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-neon-purple/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"/>
+    <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden"
+      style={{ background:'var(--bg)' }}>
+      <div style={{ position:'absolute', top:'-10%', left:'-5%', width:'400px', height:'400px', borderRadius:'50%', background:'radial-gradient(circle, rgba(34,197,94,0.08), transparent 70%)', filter:'blur(40px)', pointerEvents:'none' }}/>
+      <div style={{ position:'absolute', bottom:'-10%', right:'-5%', width:'400px', height:'400px', borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.07), transparent 70%)', filter:'blur(40px)', pointerEvents:'none' }}/>
 
-      <motion.div className="relative z-10 w-full max-w-md"
-        initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }}>
-
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors text-sm">
-          <ArrowLeft size={16}/> Back to Login
+      <motion.div className="relative z-10 w-full max-w-md" initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }}>
+        <button onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm mb-8 transition-colors"
+          style={{ color:'var(--text3)' }}
+          onMouseEnter={e => e.currentTarget.style.color='var(--text1)'}
+          onMouseLeave={e => e.currentTarget.style.color='var(--text3)'}>
+          <ArrowLeft size={15}/> Back to Login
         </button>
 
         <AnimatePresence mode="wait">
           {step === 'form' ? (
             <motion.div key="form" initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:20 }}>
-              <div className="glass-strong rounded-3xl p-8 border border-white/10">
-                {/* Header */}
+              <div className="rounded-3xl p-8"
+                style={{ background:'var(--bg3)', border:'1px solid var(--border)', boxShadow:'var(--shadow)' }}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-xl bg-neon-blue/20 flex items-center justify-center">
-                    <KeyRound size={22} className="text-neon-blue"/>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+                    style={{ background:'rgba(34,197,94,0.12)' }}>
+                    <KeyRound size={22} style={{ color:'var(--p)' }}/>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-black text-white">Forgot Password?</h1>
-                    <p className="text-white/40 text-sm">We'll send you a reset link</p>
+                    <h1 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.3rem' }}>Forgot Password?</h1>
+                    <p style={{ color:'var(--text3)', fontSize:'0.8rem' }}>We'll send you a reset link</p>
                   </div>
                 </div>
 
-                <p className="text-white/30 text-sm mb-6 mt-4 leading-relaxed">
-                  Enter your registered student email address. You'll receive a password reset link valid for <span className="text-neon-blue">15 minutes</span>.
+                <p style={{ color:'var(--text3)', fontSize:'0.85rem', lineHeight:1.6, margin:'1rem 0 1.5rem' }}>
+                  Enter your registered student email. You'll receive a reset link valid for{' '}
+                  <span style={{ color:'var(--p)', fontWeight:600 }}>15 minutes</span>.
                 </p>
 
                 {error && (
-                  <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
-                    <span>⚠</span> {error}
+                  <div className="mb-4 p-3 rounded-xl text-sm flex items-center gap-2"
+                    style={{ background:'rgba(239,68,68,0.10)', border:'1px solid rgba(239,68,68,0.25)', color:'#DC2626' }}>
+                    ⚠ {error}
                   </div>
                 )}
 
                 <form onSubmit={submit} className="space-y-4">
                   <div>
-                    <label className="text-xs text-white/50 font-medium mb-1.5 block">Student Email Address</label>
+                    <label className="block mb-1.5" style={lbl}>Student Email Address</label>
                     <div className="relative">
-                      <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30"/>
-                      <input
-                        className="input-dark input-icon-left"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                      />
+                      <Mail size={15} style={{ position:'absolute', left:'1rem', top:'50%', transform:'translateY(-50%)', color:'var(--text4)', pointerEvents:'none' }}/>
+                      <input className="input-dark input-icon-left" type="email" placeholder="your@email.com"
+                        value={email} onChange={e => setEmail(e.target.value)} required/>
                     </div>
                   </div>
                   <motion.button type="submit" disabled={loading}
-                    className="btn-primary w-full flex items-center justify-center gap-2 py-4"
+                    className="btn-primary w-full flex items-center justify-center gap-2 py-3.5"
                     whileHover={{ scale:1.02 }} whileTap={{ scale:.98 }}>
                     {loading
-                      ? <div className="w-5 h-5 border-2 border-dark-900/30 border-t-dark-900 rounded-full animate-spin"/>
-                      : <><Mail size={16}/> Send Reset Link</>
+                      ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
+                      : <><Mail size={15}/> Send Reset Link</>
                     }
                   </motion.button>
                 </form>
 
-                <div className="mt-6 p-3 rounded-xl bg-white/5 border border-white/10">
-                  <p className="text-xs text-white/30 font-semibold uppercase tracking-wider mb-2">Demo Emails</p>
+                <div className="mt-6 p-3 rounded-xl"
+                  style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}>
+                  <p style={{ color:'var(--text3)', fontSize:'0.68rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'8px' }}>Demo Emails</p>
                   {['arjun@student.edu','priya@student.edu','rahul@student.edu'].map(e => (
                     <button key={e} onClick={() => setEmail(e)}
-                      className="block text-xs text-neon-blue hover:underline mb-1">{e}</button>
+                      style={{ display:'block', color:'var(--p)', fontSize:'0.78rem', marginBottom:'4px' }}
+                      onMouseEnter={ev => ev.currentTarget.style.textDecoration='underline'}
+                      onMouseLeave={ev => ev.currentTarget.style.textDecoration='none'}>
+                      {e}
+                    </button>
                   ))}
                 </div>
               </div>
             </motion.div>
           ) : (
             <motion.div key="sent" initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-20 }}>
-              <div className="glass-strong rounded-3xl p-8 border border-neon-blue/20">
-                {/* Success header */}
+              <div className="rounded-3xl p-8"
+                style={{ background:'var(--bg3)', border:'1px solid rgba(34,197,94,0.25)', boxShadow:'var(--shadow)' }}>
                 <div className="text-center mb-6">
-                  <motion.div
-                    className="w-16 h-16 rounded-full bg-neon-blue/20 flex items-center justify-center mx-auto mb-4"
+                  <motion.div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ background:'rgba(34,197,94,0.12)' }}
                     initial={{ scale:0 }} animate={{ scale:1 }} transition={{ type:'spring', damping:15 }}>
-                    <Mail size={28} className="text-neon-blue"/>
+                    <Mail size={28} style={{ color:'var(--p)' }}/>
                   </motion.div>
-                  <h2 className="text-2xl font-black text-white mb-2">Reset Link Ready!</h2>
-                  <p className="text-white/40 text-sm">
-                    A reset link has been generated for <span className="text-neon-blue font-medium">{resetData?.email}</span>
+                  <h2 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.3rem' }} className="mb-2">Reset Link Ready!</h2>
+                  <p style={{ color:'var(--text3)', fontSize:'0.85rem' }}>
+                    Generated for <span style={{ color:'var(--p)', fontWeight:600 }}>{resetData?.email}</span>
                   </p>
                 </div>
 
-                {/* Email simulation box */}
-                <div className="glass rounded-2xl p-4 border border-white/10 mb-4">
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-blue to-neon-purple flex items-center justify-center text-dark-900 font-bold text-xs">E</div>
+                {/* Email preview */}
+                <div className="rounded-2xl p-4 mb-4"
+                  style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}>
+                  <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom:'1px solid var(--border2)' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                      style={{ background:'linear-gradient(135deg,#22C55E,#15803D)' }}>E</div>
                     <div>
-                      <p className="text-xs font-semibold text-white">ScholrERP</p>
-                      <p className="text-xs text-white/30">noreply@eduverse.app → {resetData?.email}</p>
+                      <p style={{ color:'var(--text1)', fontSize:'0.78rem', fontWeight:600 }}>ScholrERP</p>
+                      <p style={{ color:'var(--text4)', fontSize:'0.72rem' }}>noreply@scholrerp.app → {resetData?.email}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-white font-semibold mb-1">Password Reset Request</p>
-                  <p className="text-xs text-white/50 mb-3">
-                    Hi <span className="text-white">{resetData?.studentName}</span>, click the button below to reset your password. This link expires in 15 minutes.
+                  <p style={{ color:'var(--text1)', fontWeight:600, fontSize:'0.85rem', marginBottom:'4px' }}>Password Reset Request</p>
+                  <p style={{ color:'var(--text3)', fontSize:'0.78rem', marginBottom:'12px' }}>
+                    Hi <span style={{ color:'var(--text1)', fontWeight:500 }}>{resetData?.studentName}</span>, click below to reset your password. Expires in 15 minutes.
                   </p>
-                  <div className="bg-dark-700 rounded-xl p-3 border border-white/10">
-                    <p className="text-xs text-white/30 mb-1 font-medium">Reset Link:</p>
-                    <p className="text-xs text-neon-blue break-all leading-relaxed">{resetData?.resetLink}</p>
+                  <div className="rounded-xl p-3" style={{ background:'var(--bg3)', border:'1px solid var(--border2)' }}>
+                    <p style={{ color:'var(--text4)', fontSize:'0.68rem', fontWeight:500, marginBottom:'4px' }}>Reset Link:</p>
+                    <p style={{ color:'var(--p)', fontSize:'0.72rem', wordBreak:'break-all', lineHeight:1.5 }}>{resetData?.resetLink}</p>
                   </div>
                 </div>
 
-                {/* Action buttons */}
                 <div className="space-y-3">
-                  <motion.button
-                    onClick={() => navigate(`/reset-password?token=${resetData?.token}`)}
+                  <motion.button onClick={() => navigate(`/reset-password?token=${resetData?.token}`)}
                     className="btn-primary w-full flex items-center justify-center gap-2 py-3"
                     whileHover={{ scale:1.02 }} whileTap={{ scale:.98 }}>
-                    <ExternalLink size={16}/> Open Reset Page
+                    <ExternalLink size={15}/> Open Reset Page
                   </motion.button>
-
                   <button onClick={copyLink}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 text-white/60 hover:text-white hover:border-neon-blue/30 transition-all text-sm font-medium">
-                    {copied ? <><CheckCircle size={16} className="text-green-400"/> Copied!</> : <><Copy size={16}/> Copy Reset Link</>}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
+                    style={{ border:'1px solid var(--border2)', color:'var(--text2)', background:'transparent' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--text1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border2)'; e.currentTarget.style.color='var(--text2)'; }}>
+                    {copied ? <><CheckCircle size={15} style={{ color:'var(--p)' }}/> Copied!</> : <><Copy size={15}/> Copy Reset Link</>}
                   </button>
                 </div>
 
-                <div className="mt-4 flex items-center gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                  <span className="text-yellow-400 text-lg">⏱</span>
-                  <p className="text-xs text-yellow-400">This link expires in <strong>15 minutes</strong>. After that, request a new one.</p>
+                <div className="mt-4 flex items-center gap-2 p-3 rounded-xl"
+                  style={{ background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)' }}>
+                  <span style={{ fontSize:'1rem' }}>⏱</span>
+                  <p style={{ color:'#B8960C', fontSize:'0.78rem' }}>Link expires in <strong>15 minutes</strong>. After that, request a new one.</p>
                 </div>
 
                 <button onClick={() => { setStep('form'); setEmail(''); setError(''); }}
-                  className="w-full mt-4 text-center text-white/30 hover:text-white text-sm transition-colors">
+                  className="w-full mt-4 text-center text-sm transition-colors"
+                  style={{ color:'var(--text3)' }}
+                  onMouseEnter={e => e.currentTarget.style.color='var(--text1)'}
+                  onMouseLeave={e => e.currentTarget.style.color='var(--text3)'}>
                   ← Send to a different email
                 </button>
               </div>

@@ -8,44 +8,55 @@ export default function PasswordResetLogs() {
   const { user } = useAuth();
   const cid = user?.college_id;
   const myStudents = getStudents(cid);
-  const allLogs = getPasswordResetLogs();
-  // filter to only this college's students
-  const logs = allLogs.filter(l => myStudents.find(s => s.id === l.student_id));
+  const logs = getPasswordResetLogs().filter(l => myStudents.find(s => s.id === l.student_id));
 
   return (
     <DashboardLayout>
       <motion.div className="mb-6" initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}>
-        <h1 className="text-2xl font-black text-white">Password Reset Logs</h1>
-        <p className="text-white/40 text-sm">{logs.length} password reset{logs.length !== 1 ? 's' : ''} recorded</p>
+        <h1 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.4rem' }}>Password Reset Logs</h1>
+        <p style={{ color:'var(--text3)', fontSize:'0.8rem' }} className="mt-0.5">
+          {logs.length} password reset{logs.length !== 1 ? 's' : ''} recorded
+        </p>
       </motion.div>
 
       {logs.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center border border-white/5">
-          <ShieldCheck size={48} className="mx-auto mb-3 text-white/20"/>
-          <p className="text-white/30">No password resets yet</p>
-          <p className="text-white/20 text-sm mt-1">When students reset their passwords, it will appear here</p>
+        <div className="rounded-2xl p-14 text-center"
+          style={{ background:'var(--bg3)', border:'1px solid var(--border2)', boxShadow:'var(--shadow)' }}>
+          <ShieldCheck size={44} style={{ margin:'0 auto 12px', color:'var(--text4)' }}/>
+          <p style={{ color:'var(--text2)', fontWeight:500, fontSize:'0.9rem' }}>No password resets yet</p>
+          <p style={{ color:'var(--text3)', fontSize:'0.8rem', marginTop:'4px' }}>
+            When students reset their passwords, it will appear here
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {logs.map((log, i) => (
             <motion.div key={log.id}
-              className="glass rounded-2xl p-5 border border-white/5 flex items-center gap-4"
-              initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*.05 }}>
-              <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center shrink-0">
-                <ShieldCheck size={18} className="text-green-400"/>
+              className="flex items-center gap-4 p-5 rounded-2xl"
+              style={{ background:'var(--bg3)', border:'1px solid var(--border2)', boxShadow:'var(--shadow)', transition:'box-shadow .2s, border-color .2s' }}
+              initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*.05 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.boxShadow='var(--shadow-h)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border2)'; e.currentTarget.style.boxShadow='var(--shadow)'; }}>
+
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background:'rgba(34,197,94,0.12)' }}>
+                <ShieldCheck size={18} style={{ color:'var(--p)' }}/>
               </div>
+
               <div className="flex-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-semibold text-white flex items-center gap-1.5">
-                    <User size={14} className="text-cyan-400"/> {log.student_name}
+                <div className="flex items-center gap-3 flex-wrap mb-1">
+                  <span className="flex items-center gap-1.5 font-semibold text-sm"
+                    style={{ color:'var(--text1)' }}>
+                    <User size={13} style={{ color:'var(--p)' }}/> {log.student_name}
                   </span>
-                  <span className="text-white/40 text-sm">{log.email}</span>
-                  <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-400 border border-green-500/30">
+                  <span style={{ color:'var(--text3)', fontSize:'0.82rem' }}>{log.email}</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    style={{ background:'rgba(34,197,94,0.12)', color:'#15803D', border:'1px solid rgba(34,197,94,0.25)' }}>
                     Password Changed
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 mt-1 text-white/30 text-xs">
-                  <Clock size={12}/>
+                <div className="flex items-center gap-1.5" style={{ color:'var(--text4)', fontSize:'0.72rem' }}>
+                  <Clock size={11}/>
                   {new Date(log.reset_at).toLocaleString('en-IN', {
                     day:'numeric', month:'short', year:'numeric',
                     hour:'2-digit', minute:'2-digit'
