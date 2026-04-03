@@ -6,19 +6,21 @@ import { useTheme } from '../context/ThemeContext';
 import {
   LayoutDashboard, Users, FileText, Bell, Calendar,
   Briefcase, CreditCard, LogOut, User, ShieldCheck,
-  HeadphonesIcon, Sun, Moon, Menu, X, ChevronDown
+  HeadphonesIcon, Sun, Moon, Menu, X, ChevronDown, Building2, CalendarDays
 } from 'lucide-react';
 
 const adminLinks = [
-  { to:'/admin',            icon:LayoutDashboard, label:'Dashboard'  },
-  { to:'/admin/students',   icon:Users,           label:'Students'   },
-  { to:'/admin/results',    icon:FileText,        label:'Results'    },
-  { to:'/admin/notices',    icon:Bell,            label:'Notices'    },
-  { to:'/admin/leaves',     icon:Calendar,        label:'Leaves'     },
-  { to:'/admin/fees',       icon:CreditCard,      label:'Fees'       },
-  { to:'/admin/placements', icon:Briefcase,       label:'Placements' },
-  { to:'/admin/helpdesk',   icon:HeadphonesIcon,  label:'Helpdesk'   },
-  { to:'/admin/reset-logs', icon:ShieldCheck,     label:'Resets'     },
+  { to:'/admin',              icon:LayoutDashboard, label:'Dashboard'  },
+  { to:'/admin/students',     icon:Users,           label:'Students'   },
+  { to:'/admin/results',      icon:FileText,        label:'Results'    },
+  { to:'/admin/notices',      icon:Bell,            label:'Notices'    },
+  { to:'/admin/leaves',       icon:Calendar,        label:'Leaves'     },
+  { to:'/admin/fees',         icon:CreditCard,      label:'Fees'       },
+  { to:'/admin/placements',   icon:Briefcase,       label:'Placements' },
+  { to:'/admin/helpdesk',     icon:HeadphonesIcon,  label:'Helpdesk'   },
+  { to:'/admin/timetable',    icon:CalendarDays,    label:'Timetable'  },
+  { to:'/admin/colleges',     icon:Building2,       label:'Colleges'   },
+  { to:'/admin/reset-logs',   icon:ShieldCheck,     label:'Resets'     },
 ];
 const studentLinks = [
   { to:'/student',             icon:LayoutDashboard, label:'Dashboard'  },
@@ -29,6 +31,7 @@ const studentLinks = [
   { to:'/student/fees',        icon:CreditCard,      label:'Fees'       },
   { to:'/student/placements',  icon:Briefcase,       label:'Placements' },
   { to:'/student/helpdesk',    icon:HeadphonesIcon,  label:'Helpdesk'   },
+  { to:'/student/timetable',   icon:CalendarDays,    label:'Timetable'  },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -209,7 +212,7 @@ export default function DashboardLayout({ children }) {
                         </button>
                       )}
                       <button
-                        onClick={() => { logout(); navigate('/'); }}
+                        onClick={() => { const path = logout(); navigate(path); }}
                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
                         style={{ color:'#EF4444' }}
                         onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.08)'}

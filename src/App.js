@@ -20,9 +20,11 @@ import LeavePage          from './pages/LeavePage';
 import FeesPage           from './pages/FeesPage';
 import PlacementsPage     from './pages/PlacementsPage';
 import ProfilePage        from './pages/ProfilePage';
+import ManageColleges     from './pages/ManageColleges';
 import PasswordResetLogs  from './pages/PasswordResetLogs';
 import HelpdeskPage       from './pages/HelpdeskPage';
 import AdminHelpdeskPage  from './pages/AdminHelpdeskPage';
+import TimetablePage      from './pages/TimetablePage';
 
 class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -76,6 +78,8 @@ function AppRoutes() {
       <Route path="/admin/placements"  element={<Guard role="admin"><PlacementsPage/></Guard>}/>
       <Route path="/admin/reset-logs"   element={<Guard role="admin"><PasswordResetLogs/></Guard>}/>
       <Route path="/admin/helpdesk"      element={<Guard role="admin"><AdminHelpdeskPage/></Guard>}/>
+      <Route path="/admin/colleges"      element={<Guard role="admin"><ManageColleges/></Guard>}/>
+      <Route path="/admin/timetable"     element={<Guard role="admin"><TimetablePage/></Guard>}/>
 
       <Route path="/student"           element={<Guard role="student"><StudentDashboard/></Guard>}/>
       <Route path="/student/profile"   element={<Guard role="student"><ProfilePage/></Guard>}/>
@@ -85,6 +89,7 @@ function AppRoutes() {
       <Route path="/student/fees"      element={<Guard role="student"><FeesPage/></Guard>}/>
       <Route path="/student/placements" element={<Guard role="student"><PlacementsPage/></Guard>}/>
       <Route path="/student/helpdesk"   element={<Guard role="student"><HelpdeskPage/></Guard>}/>
+      <Route path="/student/timetable"  element={<Guard role="student"><TimetablePage/></Guard>}/>
 
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>

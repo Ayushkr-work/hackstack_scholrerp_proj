@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, KeyRound, CheckCircle, XCircle, ShieldCheck } from 'lucide-react';
-import { validateResetToken, resetPassword } from '../utils/mockData';
+import { validateResetToken, resetPassword } from '../utils/api';
 
 const lbl = { color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 };
 
@@ -24,22 +24,27 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!token) { setTokenInfo({ valid:false, message:'No reset token provided.' }); setChecking(false); return; }
-    setTokenInfo(validateResetToken(token)); setChecking(false);
+    validateResetToken(token)
+      .then(data => setTokenInfo({ valid: true, ...data }))
+      .catch(err => setTokenInfo({ valid: false, message: err.message || 'Invalid or expired reset link.' }))
+      .finally(() => setChecking(false));
   }, [token]);
 
   const pw = form.password;
   const strength = pw.length === 0 ? 0 : [pw.length>=8, /[A-Z]/.test(pw), /[0-9]/.test(pw), /[^A-Za-z0-9]/.test(pw)].filter(Boolean).length;
 
-  const submit = e => {
+  const submit = async e => {
     e.preventDefault(); setError('');
     if (pw.length < 6) { setError('Password must be at least 6 characters'); return; }
     if (pw !== form.confirm) { setError('Passwords do not match'); return; }
     setLoading(true);
-    setTimeout(() => {
-      const r = resetPassword(token, pw);
-      if (!r.success) { setError(r.message); setLoading(false); return; }
-      setDone(true); setLoading(false);
-    }, 800);
+    try {
+      await resetPassword(token, pw);
+      setDone(true);
+    } catch (err) {
+      setError(err.message || 'Reset failed. Please try again.');
+    }
+    setLoading(false);
   };
 
   const pageWrap = (children) => (

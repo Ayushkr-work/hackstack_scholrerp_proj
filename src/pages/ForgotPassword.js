@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ArrowLeft, KeyRound, Copy, CheckCircle, ExternalLink } from 'lucide-react';
-import { createResetToken } from '../utils/mockData';
-import emailjs from 'emailjs-com';
+import { requestPasswordReset } from '../utils/api';
 
 const lbl = { color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 };
 
@@ -18,17 +17,15 @@ export default function ForgotPassword() {
 
   const submit = async e => {
     e.preventDefault(); setError(''); setLoading(true);
-    const result = createResetToken(email.trim().toLowerCase());
-    if (!result.success) { setError(result.message); setLoading(false); return; }
-    const resetLink = `${window.location.origin}/reset-password?token=${result.token}`;
-    setResetData({ ...result, resetLink });
     try {
-      await emailjs.send('service_eduverse','template_reset',
-        { to_email:result.email, to_name:result.studentName, reset_link:resetLink, expiry_time:'15 minutes' },
-        'YOUR_EMAILJS_PUBLIC_KEY'
-      );
-    } catch {}
-    setLoading(false); setStep('sent');
+      const result = await requestPasswordReset(email.trim().toLowerCase());
+      const resetLink = `${window.location.origin}/reset-password?token=${result.token}`;
+      setResetData({ ...result, resetLink });
+      setStep('sent');
+    } catch (err) {
+      setError(err.message || 'Failed to generate reset link');
+    }
+    setLoading(false);
   };
 
   const copyLink = () => {
@@ -63,12 +60,12 @@ export default function ForgotPassword() {
                   </div>
                   <div>
                     <h1 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.3rem' }}>Forgot Password?</h1>
-                    <p style={{ color:'var(--text3)', fontSize:'0.8rem' }}>We'll send you a reset link</p>
+                    <p style={{ color:'var(--text3)', fontSize:'0.8rem' }}>We'll generate a reset link</p>
                   </div>
                 </div>
 
                 <p style={{ color:'var(--text3)', fontSize:'0.85rem', lineHeight:1.6, margin:'1rem 0 1.5rem' }}>
-                  Enter your registered student email. You'll receive a reset link valid for{' '}
+                  Enter your registered student email. You'll get a reset link valid for{' '}
                   <span style={{ color:'var(--p)', fontWeight:600 }}>15 minutes</span>.
                 </p>
 
@@ -97,19 +94,6 @@ export default function ForgotPassword() {
                     }
                   </motion.button>
                 </form>
-
-                <div className="mt-6 p-3 rounded-xl"
-                  style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}>
-                  <p style={{ color:'var(--text3)', fontSize:'0.68rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'8px' }}>Demo Emails</p>
-                  {['arjun@student.edu','priya@student.edu','rahul@student.edu'].map(e => (
-                    <button key={e} onClick={() => setEmail(e)}
-                      style={{ display:'block', color:'var(--p)', fontSize:'0.78rem', marginBottom:'4px' }}
-                      onMouseEnter={ev => ev.currentTarget.style.textDecoration='underline'}
-                      onMouseLeave={ev => ev.currentTarget.style.textDecoration='none'}>
-                      {e}
-                    </button>
-                  ))}
-                </div>
               </div>
             </motion.div>
           ) : (
@@ -128,12 +112,11 @@ export default function ForgotPassword() {
                   </p>
                 </div>
 
-                {/* Email preview */}
                 <div className="rounded-2xl p-4 mb-4"
                   style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}>
                   <div className="flex items-center gap-2 mb-3 pb-3" style={{ borderBottom:'1px solid var(--border2)' }}>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                      style={{ background:'linear-gradient(135deg,#22C55E,#15803D)' }}>E</div>
+                      style={{ background:'linear-gradient(135deg,#22C55E,#15803D)' }}>S</div>
                     <div>
                       <p style={{ color:'var(--text1)', fontSize:'0.78rem', fontWeight:600 }}>ScholrERP</p>
                       <p style={{ color:'var(--text4)', fontSize:'0.72rem' }}>noreply@scholrerp.app → {resetData?.email}</p>
@@ -141,7 +124,7 @@ export default function ForgotPassword() {
                   </div>
                   <p style={{ color:'var(--text1)', fontWeight:600, fontSize:'0.85rem', marginBottom:'4px' }}>Password Reset Request</p>
                   <p style={{ color:'var(--text3)', fontSize:'0.78rem', marginBottom:'12px' }}>
-                    Hi <span style={{ color:'var(--text1)', fontWeight:500 }}>{resetData?.studentName}</span>, click below to reset your password. Expires in 15 minutes.
+                    Hi <span style={{ color:'var(--text1)', fontWeight:500 }}>{resetData?.studentName}</span>, use the link below to reset your password. Expires in 15 minutes.
                   </p>
                   <div className="rounded-xl p-3" style={{ background:'var(--bg3)', border:'1px solid var(--border2)' }}>
                     <p style={{ color:'var(--text4)', fontSize:'0.68rem', fontWeight:500, marginBottom:'4px' }}>Reset Link:</p>

@@ -1,17 +1,27 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, CreditCard, Bell, Calendar, Briefcase, TrendingUp, ArrowUpRight, Activity } from 'lucide-react';
+import { Users, CreditCard, Bell, Calendar, Briefcase, TrendingUp, Activity } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import DashboardLayout from '../components/DashboardLayout';
 import Chatbot from '../components/Chatbot';
 import { useAuth } from '../context/AuthContext';
-import { getStudents, getFees, getLeaves, getNotices, getPlacements, chartData } from '../utils/mockData';
+
+const API = 'http://localhost:5000/api';
+const chartData = [
+  { month:'Jan', students:40, fees:180000 },
+  { month:'Feb', students:55, fees:247500 },
+  { month:'Mar', students:70, fees:315000 },
+  { month:'Apr', students:65, fees:292500 },
+  { month:'May', students:90, fees:405000 },
+  { month:'Jun', students:110, fees:495000 },
+];
 
 const f = (i, d=0) => ({ initial:{opacity:0,y:18}, animate:{opacity:1,y:0}, transition:{delay:d+i*.06,duration:.32,ease:'easeOut'} });
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl px-4 py-3 text-xs" style={{ background:'var(--bg4)', border:'1px solid var(--border)', boxShadow:'0 12px 32px rgba(0,0,0,0.5)' }}>
+    <div className="rounded-xl px-4 py-3 text-xs" style={{ background:'var(--bg4)', border:'1px solid var(--border)', boxShadow:'0 12px 32px rgba(0,0,0,0.3)' }}>
       <p className="font-bold mb-2" style={{ color:'var(--text1)' }}>{label}</p>
       {payload.map((p,i) => (
         <p key={i} className="flex items-center gap-2" style={{ color:p.color }}>
@@ -25,28 +35,35 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const cid = user?.college_id;
-  const students   = getStudents(cid);
-  const fees       = getFees().filter(f => students.find(s => s.id === f.student_id));
-  const leaves     = getLeaves().filter(l => students.find(s => s.id === l.student_id));
-  const notices    = getNotices(cid);
-  const placements = getPlacements(cid);
-  const feesCollected = fees.filter(f=>f.status==='paid').reduce((a,f)=>a+Number(f.amount),0);
+  const token = localStorage.getItem('token');
+  const [stats, setStats]   = useState({ total_students:0, fees_collected:0, pending_leaves:0, total_notices:0, total_placements:0 });
+  const [notices, setNotices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { label:'Total Students',  value:students.length,                    icon:Users,      color:'#22C55E', bg:'rgba(34,197,94,0.12)',   change:'+12%' },
-    { label:'Fees Collected',  value:`₹${feesCollected.toLocaleString()}`,icon:CreditCard, color:'#D4AF37', bg:'rgba(212,175,55,0.12)',  change:'+8%'  },
-    { label:'Pending Leaves',  value:leaves.filter(l=>l.status==='pending').length, icon:Calendar, color:'#F59E0B', bg:'rgba(245,158,11,0.12)', change:'' },
-    { label:'Active Notices',  value:notices.length,                     icon:Bell,       color:'#4ADE80', bg:'rgba(74,222,128,0.12)',  change:''     },
-    { label:'Placements',      value:placements.length,                  icon:Briefcase,  color:'#D4AF37', bg:'rgba(212,175,55,0.12)',  change:''     },
+  useEffect(() => {
+    const headers = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      fetch(`${API}/students/dashboard/stats`, { headers }).then(r => r.json()).catch(() => ({})),
+      fetch(`${API}/notices`, { headers }).then(r => r.json()).catch(() => []),
+    ]).then(([s, n]) => {
+      if (s && !s.message) setStats(s);
+      if (Array.isArray(n)) setNotices(n.slice(0, 4));
+    }).finally(() => setLoading(false));
+  }, [token]);
+
+  const statCards = [
+    { label:'Total Students',  value: stats.total_students,                                    icon:Users,      color:'#22C55E', bg:'rgba(34,197,94,0.12)',   change:'' },
+    { label:'Fees Collected',  value:`₹${Number(stats.fees_collected||0).toLocaleString()}`,   icon:CreditCard, color:'#D4AF37', bg:'rgba(212,175,55,0.12)',  change:'' },
+    { label:'Pending Leaves',  value: stats.pending_leaves,                                    icon:Calendar,   color:'#F59E0B', bg:'rgba(245,158,11,0.12)',  change:'' },
+    { label:'Active Notices',  value: stats.total_notices,                                     icon:Bell,       color:'#4ADE80', bg:'rgba(74,222,128,0.12)',  change:'' },
+    { label:'Placements',      value: stats.total_placements,                                  icon:Briefcase,  color:'#D4AF37', bg:'rgba(212,175,55,0.12)',  change:'' },
   ];
 
   return (
     <DashboardLayout>
-      {/* Welcome */}
       <motion.div className="mb-8" {...f(0)}>
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background:'#34d399' }}/>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background:'#22C55E' }}/>
           <span className="text-xs font-medium" style={{ color:'var(--text3)' }}>Live Dashboard</span>
         </div>
         <h1 className="text-2xl font-black" style={{ color:'var(--text1)' }}>
@@ -57,19 +74,21 @@ export default function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        {stats.map(({ label, value, icon:Icon, color, bg, change }, i) => (
-          <motion.div key={i} {...f(i,0.05)} className="stat-card" style={{ '--accent':color }}>
+        {statCards.map(({ label, value, icon:Icon, color, bg, change }, i) => (
+          <motion.div key={i} {...f(i,0.05)} className="stat-card">
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background:bg }}>
                 <Icon size={18} style={{ color }}/>
               </div>
               {change && (
-                <span className="flex items-center gap-0.5 text-xs font-bold" style={{ color:'#34d399' }}>
+                <span className="flex items-center gap-0.5 text-xs font-bold" style={{ color:'#22C55E' }}>
                   <TrendingUp size={10}/>{change}
                 </span>
               )}
             </div>
-            <p className="text-2xl font-black mb-0.5" style={{ color:'var(--text1)' }}>{value}</p>
+            <p className="text-2xl font-black mb-0.5" style={{ color:'var(--text1)' }}>
+              {loading ? '—' : value}
+            </p>
             <p className="text-xs" style={{ color:'var(--text3)' }}>{label}</p>
             <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full opacity-15 blur-2xl pointer-events-none" style={{ background:color }}/>
           </motion.div>
@@ -78,7 +97,6 @@ export default function AdminDashboard() {
 
       {/* Chart + Notices */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Chart */}
         <motion.div {...f(6)} className="lg:col-span-2 card-flat p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -86,10 +104,9 @@ export default function AdminDashboard() {
               <p className="text-xs mt-0.5" style={{ color:'var(--text3)' }}>6-month performance</p>
             </div>
             <div className="flex items-center gap-4">
-              {[{c:'#22C55E',l:'Students'},{c:'#D4AF37',l:'Revenue'}].map(({c,l})=>(
+              {[{c:'#22C55E',l:'Students'},{c:'#D4AF37',l:'Revenue'}].map(({c,l}) => (
                 <span key={l} className="flex items-center gap-1.5 text-xs" style={{ color:'var(--text3)' }}>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background:c }}/>
-                  {l}
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background:c }}/>{l}
                 </span>
               ))}
             </div>
@@ -116,7 +133,6 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Notices */}
         <motion.div {...f(7)} className="card-flat p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-sm" style={{ color:'var(--text1)' }}>Recent Notices</h2>
@@ -125,7 +141,7 @@ export default function AdminDashboard() {
           {notices.length === 0
             ? <p className="text-xs text-center py-8" style={{ color:'var(--text3)' }}>No notices yet</p>
             : <div className="space-y-2">
-                {notices.slice(0,4).map((n,i) => (
+                {notices.map((n,i) => (
                   <div key={i} className="p-3 rounded-xl transition-all"
                     style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}
                     onMouseEnter={e=>e.currentTarget.style.borderColor='var(--border)'}

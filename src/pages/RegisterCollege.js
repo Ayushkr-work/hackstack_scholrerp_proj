@@ -1,23 +1,42 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GraduationCap, ArrowLeft, CheckCircle } from 'lucide-react';
-import { addCollege } from '../utils/mockData';
+import { GraduationCap, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
 
+const API = 'http://localhost:5000/api';
 const lbl = { color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 };
 
 export default function RegisterCollege() {
-  const [form, setForm] = useState({ name:'', email:'', password:'', adminName:'', address:'', phone:'' });
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState('');
+  const [form, setForm]     = useState({ name:'', email:'', password:'', adminName:'', address:'', phone:'' });
+  const [done, setDone]     = useState(false);
+  const [error, setError]   = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
 
-  const submit = e => {
-    e.preventDefault(); setError('');
-    const result = addCollege({ name:form.name, email:form.email, address:form.address, phone:form.phone });
-    if (!result.success) { setError(result.message); return; }
-    setDone(true);
+  const submit = async e => {
+    e.preventDefault();
+    setError(''); setLoading(true);
+    try {
+      const res = await fetch(`${API}/colleges/register`, {
+        method:  'POST',
+        headers: { 'Content-Type':'application/json' },
+        body:    JSON.stringify({
+          name:      form.name,
+          email:     form.email,
+          password:  form.password,
+          adminName: form.adminName,
+          address:   form.address,
+          phone:     form.phone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.message || 'Registration failed'); setLoading(false); return; }
+      setDone(true);
+    } catch {
+      setError('Cannot connect to server. Make sure backend is running on port 5000.');
+    }
+    setLoading(false);
   };
 
   if (done) return (
@@ -29,12 +48,17 @@ export default function RegisterCollege() {
           style={{ background:'rgba(34,197,94,0.12)' }}>
           <CheckCircle size={32} style={{ color:'var(--p)' }}/>
         </div>
-        <h2 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.4rem' }} className="mb-2">College Registered!</h2>
+        <h2 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.4rem' }} className="mb-2">
+          College Registered!
+        </h2>
         <p style={{ color:'var(--text3)', fontSize:'0.875rem' }} className="mb-1">
-          <span style={{ color:'var(--p)', fontWeight:600 }}>{form.name}</span> has been added.
+          <span style={{ color:'var(--p)', fontWeight:600 }}>{form.name}</span> has been added to the database.
+        </p>
+        <p style={{ color:'var(--text3)', fontSize:'0.82rem' }} className="mb-1">
+          Login Email: <span style={{ color:'var(--text2)', fontWeight:500 }}>{form.email}</span>
         </p>
         <p style={{ color:'var(--text3)', fontSize:'0.82rem' }} className="mb-6">
-          Login with: <span style={{ color:'var(--text2)' }}>{form.email}</span> / <span style={{ color:'var(--text2)' }}>{form.password}</span>
+          Login Password: <span style={{ color:'var(--text2)', fontWeight:500 }}>{form.password}</span>
         </p>
         <button onClick={() => navigate('/select-college')} className="btn-primary w-full">
           Go to College Selection
@@ -46,7 +70,6 @@ export default function RegisterCollege() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden"
       style={{ background:'var(--bg)' }}>
-      {/* Soft blobs */}
       <div style={{ position:'absolute', top:'-10%', right:'-5%', width:'400px', height:'400px', borderRadius:'50%', background:'radial-gradient(circle, rgba(34,197,94,0.08), transparent 70%)', filter:'blur(40px)', pointerEvents:'none' }}/>
       <div style={{ position:'absolute', bottom:'-10%', left:'-5%', width:'400px', height:'400px', borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.07), transparent 70%)', filter:'blur(40px)', pointerEvents:'none' }}/>
 
@@ -68,14 +91,14 @@ export default function RegisterCollege() {
             </div>
             <div>
               <h1 className="gradient-text" style={{ fontWeight:900, fontSize:'1.4rem' }}>Register College</h1>
-              <p style={{ color:'var(--text3)', fontSize:'0.8rem' }}>Join ScholrERP platform</p>
+              <p style={{ color:'var(--text3)', fontSize:'0.8rem' }}>Saved directly to database</p>
             </div>
           </div>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl text-sm"
               style={{ background:'rgba(239,68,68,0.10)', border:'1px solid rgba(239,68,68,0.25)', color:'#DC2626' }}>
-              {error}
+              ⚠ {error}
             </div>
           )}
 
@@ -91,6 +114,7 @@ export default function RegisterCollege() {
                 <input className="input-dark" type={type} placeholder={ph} value={form[k]} onChange={set(k)} required/>
               </div>
             ))}
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block mb-1.5" style={lbl}>Phone</label>
@@ -101,7 +125,13 @@ export default function RegisterCollege() {
                 <input className="input-dark" placeholder="City, State" value={form.address} onChange={set('address')}/>
               </div>
             </div>
-            <button type="submit" className="btn-primary w-full mt-2">Register College</button>
+
+            <button type="submit" disabled={loading} className="btn-primary w-full mt-2 flex items-center justify-center gap-2">
+              {loading
+                ? <><Loader2 size={15} className="animate-spin"/> Registering...</>
+                : 'Register College'
+              }
+            </button>
           </form>
 
           <p className="text-center text-sm mt-6" style={{ color:'var(--text3)' }}>

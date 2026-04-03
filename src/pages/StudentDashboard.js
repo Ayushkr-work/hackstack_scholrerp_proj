@@ -1,22 +1,29 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, CreditCard, Bell, Calendar, Briefcase, User, HeadphonesIcon, ArrowRight } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import Chatbot from '../components/Chatbot';
 import { useAuth } from '../context/AuthContext';
-import { getFees, getNotices, getLeaves } from '../utils/mockData';
+import api from '../utils/api';
 
 const f = (i) => ({ initial:{opacity:0,y:18}, animate:{opacity:1,y:0}, transition:{delay:i*.07,duration:.32,ease:'easeOut'} });
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const cid = user?.college_id;
-  const myFees    = getFees().filter(f => f.student_id === user?.id);
-  const myLeaves  = getLeaves().filter(l => l.student_id === user?.id);
-  const notices   = getNotices(cid);
-  const pendingFees   = myFees.filter(f => f.status === 'pending');
-  const pendingLeaves = myLeaves.filter(l => l.status === 'pending');
+  const navigate  = useNavigate();
+  const [fees,    setFees]    = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [leaves,  setLeaves]  = useState([]);
+
+  useEffect(() => {
+    api.get('/fees').then(d => setFees(Array.isArray(d) ? d : [])).catch(() => {});
+    api.get('/notices').then(d => setNotices(Array.isArray(d) ? d : [])).catch(() => {});
+    api.get('/leaves').then(d => setLeaves(Array.isArray(d) ? d : [])).catch(() => {});
+  }, []);
+
+  const pendingFees   = fees.filter(f => f.status === 'pending');
+  const pendingLeaves = leaves.filter(l => l.status === 'pending');
 
   const links = [
     { label:'Results',    icon:FileText,      to:'/student/results',    color:'#22C55E', bg:'rgba(34,197,94,0.10)'   },
@@ -30,19 +37,15 @@ export default function StudentDashboard() {
 
   return (
     <DashboardLayout>
-      {/* Hero banner */}
+      {/* Hero */}
       <motion.div {...f(0)} className="relative rounded-2xl overflow-hidden mb-8 p-6 md:p-8"
-        style={{ background:'linear-gradient(135deg, rgba(34,197,94,0.10), rgba(212,175,55,0.06))', border:'1px solid rgba(34,197,94,0.15)' }}>
-        {/* BG blobs */}
+        style={{ background:'linear-gradient(135deg,rgba(34,197,94,0.10),rgba(212,175,55,0.06))', border:'1px solid rgba(34,197,94,0.15)' }}>
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-15 blur-3xl pointer-events-none"
-          style={{ background:'radial-gradient(circle, #22C55E, transparent)' }}/>
-        <div className="absolute bottom-0 left-1/3 w-48 h-48 rounded-full opacity-10 blur-3xl pointer-events-none"
-          style={{ background:'radial-gradient(circle, #D4AF37, transparent)' }}/>
-
+          style={{ background:'radial-gradient(circle,#22C55E,transparent)' }}/>
         <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background:'#34d399' }}/>
+              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background:'#22C55E' }}/>
               <span className="text-xs font-medium" style={{ color:'var(--text3)' }}>Student Portal</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black mb-1" style={{ color:'var(--text1)' }}>
@@ -54,14 +57,14 @@ export default function StudentDashboard() {
             <div className="flex flex-wrap gap-2 mt-4">
               {pendingFees.length > 0 && (
                 <button onClick={() => navigate('/student/fees')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
                   style={{ background:'rgba(212,175,55,0.12)', color:'#B8960C', border:'1px solid rgba(212,175,55,0.28)' }}>
                   <CreditCard size={11}/> {pendingFees.length} fee pending
                 </button>
               )}
               {pendingLeaves.length > 0 && (
                 <button onClick={() => navigate('/student/leaves')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
                   style={{ background:'rgba(34,197,94,0.12)', color:'#15803D', border:'1px solid rgba(34,197,94,0.25)' }}>
                   <Calendar size={11}/> {pendingLeaves.length} leave pending
                 </button>
@@ -80,9 +83,8 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
         {links.map(({ label, icon:Icon, to, color, bg, badge }, i) => (
           <motion.button key={i} {...f(i+2)} onClick={() => navigate(to)}
-            className="card-flat p-4 text-left relative group"
-            style={{ cursor:'none' }}
-            whileHover={{ y:-3, boxShadow:`0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px ${color}30` }}>
+            className="card-flat p-4 text-left relative"
+            whileHover={{ y:-3, boxShadow:`0 12px 32px rgba(0,0,0,0.15)` }}>
             {badge > 0 && (
               <span className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
                 style={{ background:'#22C55E' }}>{badge}</span>
@@ -101,7 +103,7 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-sm" style={{ color:'var(--text1)' }}>Recent Notices</h2>
             <button onClick={() => navigate('/student/notices')}
-              className="flex items-center gap-1 text-xs font-medium transition-colors"
+              className="flex items-center gap-1 text-xs font-medium"
               style={{ color:'var(--text3)' }}
               onMouseEnter={e=>e.currentTarget.style.color='var(--p)'}
               onMouseLeave={e=>e.currentTarget.style.color='var(--text3)'}>
@@ -128,17 +130,17 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-sm" style={{ color:'var(--text1)' }}>Fee Summary</h2>
             <button onClick={() => navigate('/student/fees')}
-              className="flex items-center gap-1 text-xs font-medium transition-colors"
+              className="flex items-center gap-1 text-xs font-medium"
               style={{ color:'var(--text3)' }}
               onMouseEnter={e=>e.currentTarget.style.color='var(--p)'}
               onMouseLeave={e=>e.currentTarget.style.color='var(--text3)'}>
               View all <ArrowRight size={11}/>
             </button>
           </div>
-          {myFees.length === 0
+          {fees.length === 0
             ? <p className="text-xs text-center py-8" style={{ color:'var(--text3)' }}>No fee records</p>
             : <div className="space-y-2">
-                {myFees.map((fee,i) => (
+                {fees.map((fee,i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-xl transition-all"
                     style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}
                     onMouseEnter={e=>e.currentTarget.style.borderColor='var(--border)'}

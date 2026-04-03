@@ -16,13 +16,11 @@ export default function LoginPage({ type }) {
   const navigate  = useNavigate();
   const isAdmin   = type === 'admin';
 
-  const submit = e => {
+  const submit = async e => {
     e.preventDefault(); setError(''); setLoading(true);
-    setTimeout(() => {
-      const r = login(form.email, form.password, collegeId, type);
-      if (r.success) navigate(isAdmin ? '/admin' : '/student');
-      else { setError(r.message); setLoading(false); }
-    }, 700);
+    const r = await login(form.email, form.password, collegeId, type, collegeName);
+    if (r.success) navigate(isAdmin ? '/admin' : '/student');
+    else { setError(r.message); setLoading(false); }
   };
 
   const features = isAdmin
