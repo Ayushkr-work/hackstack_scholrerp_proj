@@ -32,6 +32,8 @@ export const updateStudent = (id, data) => api.put(`/students/${id}`, data);
 export const deleteStudent = (id)  => api.delete(`/students/${id}`);
 export const getDashboardStats = () => api.get('/students/dashboard/stats');
 
+export const getAttendance = () => api.get('/students/attendance');
+
 // ── Auth ──────────────────────────────────────────────────────────────────
 export const adminLogin   = (body) => api.post('/auth/admin/login', body);
 export const studentLogin = (body) => api.post('/auth/student/login', body);
@@ -83,5 +85,10 @@ export const replyTicket     = (id, data)  => api.put(`/helpdesk/${id}/reply`, d
 
 // ── Reset Logs ────────────────────────────────────────────────────────────
 export const getResetLogs = () => api.get('/auth/reset-logs');
+
+// ── Notes ──────────────────────────────────────────────────────────────────
+export const getNotes  = ()      => api.get('/faculty/notes');
+export const createNote = (data) => api.post('/faculty/notes', data);
+export const deleteNote = (id)   => api.delete(`/faculty/notes/${id}`);
 
 export default api;

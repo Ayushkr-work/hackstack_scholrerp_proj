@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, Trash2, MapPin, Phone, Mail, Plus, Loader2, AlertTriangle } from 'lucide-react';
+import { GraduationCap, MapPin, Phone, Mail, Plus, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import Modal from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 
 const API = 'http://localhost:5000/api';
@@ -11,13 +10,9 @@ const API = 'http://localhost:5000/api';
 export default function ManageColleges() {
   const { user } = useAuth();
   const navigate  = useNavigate();
-  const [colleges, setColleges]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
-  const [deleteModal, setDeleteModal] = useState(null); // college to delete
-  const [deleting, setDeleting]     = useState(false);
-
-  const token = localStorage.getItem('token');
+  const [colleges, setColleges] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
 
   const load = () => {
     setLoading(true);
@@ -29,31 +24,6 @@ export default function ManageColleges() {
   };
 
   useEffect(() => { load(); }, []);
-
-  const confirmDelete = async () => {
-    if (!deleteModal) return;
-    setDeleting(true);
-    try {
-      const res = await fetch(`${API}/colleges/${deleteModal.id}`, {
-        method:  'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.message); setDeleting(false); return; }
-
-      // If admin deleted their own college, logout
-      if (deleteModal.id === user?.college_id) {
-        localStorage.clear();
-        navigate('/');
-        return;
-      }
-      setDeleteModal(null);
-      load();
-    } catch {
-      setError('Delete failed. Check server connection.');
-    }
-    setDeleting(false);
-  };
 
   return (
     <DashboardLayout>
@@ -117,7 +87,7 @@ export default function ManageColleges() {
                 </div>
 
                 {/* Details */}
-                <div className="space-y-1.5 mb-5">
+                <div className="space-y-1.5">
                   <div className="flex items-center gap-2" style={{ color:'var(--text3)', fontSize:'0.78rem' }}>
                     <Mail size={12} style={{ color:'var(--p)', flexShrink:0 }}/>{c.email}
                   </div>
@@ -133,15 +103,7 @@ export default function ManageColleges() {
                   )}
                 </div>
 
-                {/* Delete button */}
-                <button
-                  onClick={() => setDeleteModal(c)}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background:'rgba(239,68,68,0.08)', color:'#DC2626', border:'1px solid rgba(239,68,68,0.20)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background='rgba(239,68,68,0.15)'; e.currentTarget.style.borderColor='rgba(239,68,68,0.35)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background='rgba(239,68,68,0.08)'; e.currentTarget.style.borderColor='rgba(239,68,68,0.20)'; }}>
-                  <Trash2 size={14}/> Delete College
-                </button>
+
               </motion.div>
             );
           })}
@@ -155,58 +117,7 @@ export default function ManageColleges() {
         </div>
       )}
 
-      {/* Delete confirmation modal */}
-      <Modal open={!!deleteModal} onClose={() => !deleting && setDeleteModal(null)} title="Delete College" size="sm">
-        {deleteModal && (
-          <div className="space-y-4">
-            {/* Warning */}
-            <div className="flex items-start gap-3 p-4 rounded-xl"
-              style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.20)' }}>
-              <AlertTriangle size={18} style={{ color:'#DC2626', flexShrink:0, marginTop:'2px' }}/>
-              <div>
-                <p style={{ color:'#DC2626', fontWeight:700, fontSize:'0.875rem', marginBottom:'4px' }}>
-                  This action cannot be undone!
-                </p>
-                <p style={{ color:'var(--text3)', fontSize:'0.8rem', lineHeight:1.5 }}>
-                  Deleting <strong style={{ color:'var(--text1)' }}>{deleteModal.name}</strong> will permanently remove:
-                </p>
-                <ul style={{ color:'var(--text3)', fontSize:'0.78rem', marginTop:'6px', paddingLeft:'1rem', lineHeight:1.8 }}>
-                  <li>All students & their data</li>
-                  <li>All results, fees, leaves</li>
-                  <li>All notices & placements</li>
-                  <li>Admin account</li>
-                </ul>
-                {deleteModal.id === user?.college_id && (
-                  <p style={{ color:'#DC2626', fontSize:'0.78rem', marginTop:'8px', fontWeight:600 }}>
-                    ⚠ You are deleting your own college. You will be logged out.
-                  </p>
-                )}
-              </div>
-            </div>
 
-            {/* College info */}
-            <div className="p-3 rounded-xl" style={{ background:'var(--bg4)', border:'1px solid var(--border2)' }}>
-              <p style={{ color:'var(--text1)', fontWeight:600, fontSize:'0.875rem' }}>{deleteModal.name}</p>
-              <p style={{ color:'var(--text3)', fontSize:'0.78rem', marginTop:'2px' }}>{deleteModal.email}</p>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteModal(null)} disabled={deleting}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all btn-ghost">
-                Cancel
-              </button>
-              <button onClick={confirmDelete} disabled={deleting}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-                style={{ background:'linear-gradient(135deg,#EF4444,#DC2626)', color:'#fff', border:'1px solid rgba(239,68,68,0.3)', boxShadow:'0 4px 14px rgba(239,68,68,0.25)' }}>
-                {deleting
-                  ? <><Loader2 size={14} className="animate-spin"/> Deleting...</>
-                  : <><Trash2 size={14}/> Yes, Delete</>
-                }
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
     </DashboardLayout>
   );
 }

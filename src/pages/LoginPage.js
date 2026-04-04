@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, ArrowLeft, Shield, User, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Shield, User, Sparkles, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage({ type }) {
@@ -15,20 +15,29 @@ export default function LoginPage({ type }) {
   const { login } = useAuth();
   const navigate  = useNavigate();
   const isAdmin   = type === 'admin';
+  const isFaculty = type === 'faculty';
+  const isStudent = type === 'student';
 
   const submit = async e => {
     e.preventDefault(); setError(''); setLoading(true);
     const r = await login(form.email, form.password, collegeId, type, collegeName);
-    if (r.success) navigate(isAdmin ? '/admin' : '/student');
+    if (r.success) navigate(isAdmin ? '/admin' : isFaculty ? '/faculty' : '/student');
     else { setError(r.message); setLoading(false); }
   };
 
   const features = isAdmin
     ? ['Manage students & results','Track fee payments','Post notices & manage leaves']
+    : isFaculty
+    ? ['View your assigned timetable','Upload student marks','Manage class records']
     : ['View results & grades','Pay fees online','Apply for leave & placements'];
 
-  const accent = isAdmin ? '#D4AF37' : '#22C55E';
-  const accentBg = isAdmin ? 'rgba(212,175,55,0.12)' : 'rgba(34,197,94,0.12)';
+  const accent = isAdmin ? '#D4AF37' : isFaculty ? '#818CF8' : '#22C55E';
+  const accentBg = isAdmin ? 'rgba(212,175,55,0.12)' : isFaculty ? 'rgba(129,140,248,0.12)' : 'rgba(34,197,94,0.12)';
+  const accentDark = isAdmin ? '#B8960C' : isFaculty ? '#6366F1' : '#15803D';
+
+  const portalLabel = isAdmin ? 'Admin Portal' : isFaculty ? 'Faculty Portal' : 'Student Portal';
+  const loginLabel  = isAdmin ? 'Admin Login'  : isFaculty ? 'Faculty Login'  : 'Student Login';
+  const Icon = isAdmin ? Shield : isFaculty ? GraduationCap : User;
 
   return (
     <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
@@ -43,13 +52,13 @@ export default function LoginPage({ type }) {
 
         <div className="relative z-10 max-w-sm w-full">
           <motion.div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-            style={{ background:`linear-gradient(135deg, ${accent}, ${isAdmin?'#B8960C':'#15803D'})`, boxShadow:`0 12px 32px ${accentBg}` }}
+            style={{ background:`linear-gradient(135deg, ${accent}, ${accentDark})`, boxShadow:`0 12px 32px ${accentBg}` }}
             animate={{ y:[0,-8,0] }} transition={{ duration:4, repeat:Infinity, ease:'easeInOut' }}>
-            {isAdmin ? <Shield size={28} color="#fff"/> : <User size={28} color="#fff"/>}
+            <Icon size={28} color="#fff"/>
           </motion.div>
 
           <h2 className="gradient-text" style={{ fontWeight:900, fontSize:'1.8rem', marginBottom:'0.5rem' }}>
-            {isAdmin ? 'Admin Portal' : 'Student Portal'}
+            {portalLabel}
           </h2>
           <p style={{ color:'var(--text3)', fontSize:'0.875rem', marginBottom:'2rem' }}>{collegeName}</p>
 
@@ -92,11 +101,11 @@ export default function LoginPage({ type }) {
             style={{ background:'var(--bg3)', border:'1px solid var(--border)', boxShadow:'var(--shadow)' }}>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background:accentBg }}>
-                {isAdmin ? <Shield size={20} style={{ color:accent }}/> : <User size={20} style={{ color:accent }}/>}
+                <Icon size={20} style={{ color:accent }}/>
               </div>
               <div>
                 <h1 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.25rem' }}>
-                  {isAdmin ? 'Admin Login' : 'Student Login'}
+                  {loginLabel}
                 </h1>
                 <p style={{ color:'var(--text3)', fontSize:'0.78rem', marginTop:'2px' }}>{collegeName}</p>
               </div>
@@ -136,12 +145,12 @@ export default function LoginPage({ type }) {
                 whileHover={{ scale:1.01 }} whileTap={{ scale:.98 }}>
                 {loading
                   ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-                  : `Sign in as ${isAdmin ? 'Admin' : 'Student'}`
+                  : `Sign in as ${isAdmin ? 'Admin' : isFaculty ? 'Faculty' : 'Student'}`
                 }
               </motion.button>
             </form>
 
-            {!isAdmin && (
+            {!isAdmin && !isFaculty && (
               <div className="text-center mt-4">
                 <button onClick={() => navigate('/forgot-password')}
                   className="text-xs transition-colors"
@@ -153,17 +162,38 @@ export default function LoginPage({ type }) {
               </div>
             )}
 
-            <p className="text-center text-xs mt-5" style={{ color:'var(--text3)' }}>
-              {isAdmin ? 'Are you a student?' : 'Are you an admin?'}{' '}
-              <button onClick={() => navigate(isAdmin
-                ? `/student/login?college=${collegeId}&name=${encodeURIComponent(collegeName)}`
-                : `/admin/login?college=${collegeId}&name=${encodeURIComponent(collegeName)}`)}
-                style={{ color:'var(--p)', fontWeight:600 }}
-                onMouseEnter={e => e.currentTarget.style.textDecoration='underline'}
-                onMouseLeave={e => e.currentTarget.style.textDecoration='none'}>
-                Login here
-              </button>
-            </p>
+            <div className="mt-6">
+              <p className="text-center text-[11px] mb-3" style={{ color:'var(--text3)' }}>Other portals</p>
+              <div className="grid grid-cols-2 gap-2">
+                {!isAdmin && (
+                  <button onClick={() => navigate(`/admin/login?college=${collegeId}&name=${encodeURIComponent(collegeName)}`)}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background:'rgba(212,175,55,0.08)', color:'#D4AF37', border:'1px solid rgba(212,175,55,0.20)' }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(212,175,55,0.16)'}
+                    onMouseLeave={e => e.currentTarget.style.background='rgba(212,175,55,0.08)'}>
+                    <Shield size={13}/> Admin Login
+                  </button>
+                )}
+                {!isStudent && (
+                  <button onClick={() => navigate(`/student/login?college=${collegeId}&name=${encodeURIComponent(collegeName)}`)}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background:'rgba(34,197,94,0.08)', color:'#22C55E', border:'1px solid rgba(34,197,94,0.20)' }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(34,197,94,0.16)'}
+                    onMouseLeave={e => e.currentTarget.style.background='rgba(34,197,94,0.08)'}>
+                    <User size={13}/> Student Login
+                  </button>
+                )}
+                {!isFaculty && (
+                  <button onClick={() => navigate(`/faculty/login?college=${collegeId}&name=${encodeURIComponent(collegeName)}`)}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background:'rgba(129,140,248,0.08)', color:'#818CF8', border:'1px solid rgba(129,140,248,0.20)' }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(129,140,248,0.16)'}
+                    onMouseLeave={e => e.currentTarget.style.background='rgba(129,140,248,0.08)'}>
+                    <GraduationCap size={13}/> Faculty Login
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, CreditCard, Bell, Calendar, Briefcase, User, HeadphonesIcon, ArrowRight } from 'lucide-react';
+import { FileText, CreditCard, Bell, Calendar, Briefcase, User, HeadphonesIcon, ArrowRight, BookOpen, Rocket, ClipboardList } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import Chatbot from '../components/Chatbot';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +31,8 @@ export default function StudentDashboard() {
     { label:'Notices',    icon:Bell,          to:'/student/notices',    color:'#22C55E', bg:'rgba(34,197,94,0.10)',   badge:notices.length       },
     { label:'Leave',      icon:Calendar,      to:'/student/leaves',     color:'#F59E0B', bg:'rgba(245,158,11,0.10)',  badge:pendingLeaves.length },
     { label:'Placements', icon:Briefcase,     to:'/student/placements', color:'#D4AF37', bg:'rgba(212,175,55,0.10)' },
+    { label:'Study',      icon:Rocket,        to:'/student/notes',       color:'#818CF8', bg:'rgba(129,140,248,0.10)' },
+    { label:'Attendance', icon:ClipboardList, to:'/student/attendance',  color:'#22C55E', bg:'rgba(34,197,94,0.10)'   },
     { label:'Helpdesk',   icon:HeadphonesIcon,to:'/student/helpdesk',   color:'#22C55E', bg:'rgba(34,197,94,0.10)'  },
     { label:'Profile',    icon:User,          to:'/student/profile',    color:'#6B7280', bg:'rgba(107,114,128,0.10)' },
   ];
@@ -80,7 +82,7 @@ export default function StudentDashboard() {
 
       {/* Quick links */}
       <motion.h2 {...f(1)} className="text-sm font-bold mb-4" style={{ color:'var(--text2)' }}>Quick Access</motion.h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-8">
         {links.map(({ label, icon:Icon, to, color, bg, badge }, i) => (
           <motion.button key={i} {...f(i+2)} onClick={() => navigate(to)}
             className="card-flat p-4 text-left relative"

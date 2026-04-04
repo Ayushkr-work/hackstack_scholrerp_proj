@@ -111,6 +111,14 @@ export default function SelectCollege() {
                     onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(212,175,55,0.30)'; }}>
                     Student Login
                   </button>
+                  <button
+                    onClick={() => navigate(`/faculty/login?college=${c.id}&name=${encodeURIComponent(c.name)}`)}
+                    className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
+                    style={{ border:'1px solid rgba(129,140,248,0.30)', color:'#818CF8', background:'transparent' }}
+                    onMouseEnter={e => { e.currentTarget.style.background='rgba(129,140,248,0.10)'; e.currentTarget.style.borderColor='rgba(129,140,248,0.50)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(129,140,248,0.30)'; }}>
+                    Faculty Login
+                  </button>
                 </div>
               </motion.div>
             ))}

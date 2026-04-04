@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
-import Modal from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 
@@ -13,7 +12,6 @@ const gradeStyle = g => {
   if (['C+','C'].includes(g))     return { color:'#D97706', fontWeight:700 };
   return { color:'#DC2626', fontWeight:700 };
 };
-const lbl = { color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 };
 const th  = { color:'var(--text3)', fontSize:'0.7rem', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' };
 
 export default function ResultsPage() {
@@ -22,8 +20,6 @@ export default function ResultsPage() {
   const [selStudent, setSelStudent] = useState(role === 'student' ? String(user?.id) : '');
   const [results, setResults]       = useState([]);
   const [loading, setLoading]       = useState(false);
-  const [modal, setModal]           = useState(false);
-  const [form, setForm]             = useState({ student_id:'', semester:1, results:[{ subject:'', marks:'', max_marks:100, grade:'' }] });
 
   useEffect(() => {
     if (role === 'admin') api.get('/students').then(d => setStudents(Array.isArray(d) ? d : [])).catch(() => {});
@@ -39,19 +35,6 @@ export default function ResultsPage() {
 
   const onSelectStudent = sid => { setSelStudent(sid); loadResults(sid); };
 
-  const addRow = () => setForm(p => ({ ...p, results:[...p.results, { subject:'', marks:'', max_marks:100, grade:'' }] }));
-  const updRow = (i, k, v) => setForm(p => { const r=[...p.results]; r[i]={...r[i],[k]:v}; return {...p,results:r}; });
-
-  const submit = async e => {
-    e.preventDefault();
-    try {
-      await api.post('/results', form);
-      if (selStudent === String(form.student_id)) loadResults(form.student_id);
-      setModal(false);
-      setForm({ student_id:'', semester:1, results:[{ subject:'', marks:'', max_marks:100, grade:'' }] });
-    } catch (err) { alert(err.message); }
-  };
-
   const bySem = results.reduce((acc, r) => { (acc[r.semester]||(acc[r.semester]=[])).push(r); return acc; }, {});
 
   return (
@@ -61,7 +44,6 @@ export default function ResultsPage() {
           <h1 style={{ color:'var(--text1)', fontWeight:900, fontSize:'1.4rem' }}>Results</h1>
           <p style={{ color:'var(--text3)', fontSize:'0.8rem' }} className="mt-0.5">Semester-wise academic results</p>
         </div>
-        {role==='admin' && <button onClick={() => setModal(true)} className="btn-primary flex items-center gap-2 text-sm"><Plus size={16}/> Upload Results</button>}
       </div>
 
       {role==='admin' && (
@@ -121,39 +103,6 @@ export default function ResultsPage() {
           })}
         </div>
       )}
-
-      <Modal open={modal} onClose={() => setModal(false)} title="Upload Results" size="lg">
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="block mb-1.5" style={lbl}>Student *</label>
-              <select className="input-dark" value={form.student_id} onChange={e=>setForm(p=>({...p,student_id:e.target.value}))} required>
-                <option value="">Select student</option>
-                {students.map(s=><option key={s.id} value={s.id}>{s.name} ({s.roll_no})</option>)}
-              </select>
-            </div>
-            <div><label className="block mb-1.5" style={lbl}>Semester *</label>
-              <select className="input-dark" value={form.semester} onChange={e=>setForm(p=>({...p,semester:e.target.value}))}>
-                {[1,2,3,4,5,6,7,8].map(s=><option key={s} value={s}>Semester {s}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="grid grid-cols-4 gap-2 px-1" style={{ color:'var(--text3)', fontSize:'0.72rem', fontWeight:500 }}>
-              <span>Subject</span><span>Marks</span><span>Max</span><span>Grade</span>
-            </div>
-            {form.results.map((r,i) => (
-              <div key={i} className="grid grid-cols-4 gap-2">
-                <input className="input-dark text-sm py-2" placeholder="Subject" value={r.subject} onChange={e=>updRow(i,'subject',e.target.value)}/>
-                <input className="input-dark text-sm py-2" type="number" placeholder="Marks" value={r.marks} onChange={e=>updRow(i,'marks',e.target.value)}/>
-                <input className="input-dark text-sm py-2" type="number" placeholder="100" value={r.max_marks} onChange={e=>updRow(i,'max_marks',e.target.value)}/>
-                <input className="input-dark text-sm py-2" placeholder="A+" value={r.grade} onChange={e=>updRow(i,'grade',e.target.value)}/>
-              </div>
-            ))}
-            <button type="button" onClick={addRow} style={{ color:'var(--p)', fontSize:'0.85rem' }} className="hover:underline">+ Add Subject</button>
-          </div>
-          <button type="submit" className="btn-primary w-full">Upload Results</button>
-        </form>
-      </Modal>
     </DashboardLayout>
   );
 }

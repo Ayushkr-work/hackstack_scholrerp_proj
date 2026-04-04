@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, collegeId, loginRole, collegeName) => {
     try {
-      const endpoint = loginRole === 'admin' ? '/auth/admin/login' : '/auth/student/login';
+      const endpoint = loginRole === 'admin' ? '/auth/admin/login' : loginRole === 'faculty' ? '/auth/faculty/login' : '/auth/student/login';
       const res = await fetch(`${API}${endpoint}`, {
         method:  'POST',
         headers: { 'Content-Type':'application/json' },
@@ -62,7 +62,8 @@ export const AuthProvider = ({ children }) => {
     const params = new URLSearchParams();
     if (collegeId)   params.set('college', collegeId);
     if (collegeName) params.set('name', collegeName);
-    const redirectPath = `/${currentRole === 'admin' ? 'admin' : 'student'}/login?${params.toString()}`;
+    const rolePrefix = currentRole === 'admin' ? 'admin' : currentRole === 'faculty' ? 'faculty' : 'student';
+    const redirectPath = `/${rolePrefix}/login?${params.toString()}`;
     localStorage.removeItem('token');
     localStorage.removeItem('erp_user');
     localStorage.removeItem('erp_role');

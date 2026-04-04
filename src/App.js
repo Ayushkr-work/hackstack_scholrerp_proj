@@ -20,11 +20,15 @@ import LeavePage          from './pages/LeavePage';
 import FeesPage           from './pages/FeesPage';
 import PlacementsPage     from './pages/PlacementsPage';
 import ProfilePage        from './pages/ProfilePage';
-import ManageColleges     from './pages/ManageColleges';
 import PasswordResetLogs  from './pages/PasswordResetLogs';
 import HelpdeskPage       from './pages/HelpdeskPage';
 import AdminHelpdeskPage  from './pages/AdminHelpdeskPage';
 import TimetablePage      from './pages/TimetablePage';
+import FacultyDashboard   from './pages/FacultyDashboard';
+import ManageFaculty      from './pages/ManageFaculty';
+import LibraryPage        from './pages/LibraryPage';
+import AttendancePage      from './pages/AttendancePage';
+import NotesPage          from './pages/NotesPage';
 
 class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -66,6 +70,7 @@ function AppRoutes() {
       <Route path="/register-college"  element={<RegisterCollege/>}/>
       <Route path="/admin/login"       element={<LoginPage type="admin"/>}/>
       <Route path="/student/login"     element={<LoginPage type="student"/>}/>
+      <Route path="/faculty/login"     element={<LoginPage type="faculty"/>}/>
       <Route path="/forgot-password"   element={<ForgotPassword/>}/>
       <Route path="/reset-password"    element={<ResetPassword/>}/>
 
@@ -78,8 +83,11 @@ function AppRoutes() {
       <Route path="/admin/placements"  element={<Guard role="admin"><PlacementsPage/></Guard>}/>
       <Route path="/admin/reset-logs"   element={<Guard role="admin"><PasswordResetLogs/></Guard>}/>
       <Route path="/admin/helpdesk"      element={<Guard role="admin"><AdminHelpdeskPage/></Guard>}/>
-      <Route path="/admin/colleges"      element={<Guard role="admin"><ManageColleges/></Guard>}/>
       <Route path="/admin/timetable"     element={<Guard role="admin"><TimetablePage/></Guard>}/>
+      <Route path="/admin/faculty"       element={<Guard role="admin"><ManageFaculty/></Guard>}/>
+      <Route path="/admin/library"       element={<Guard role="admin"><LibraryPage/></Guard>}/>
+
+      <Route path="/faculty"             element={<Guard role="faculty"><FacultyDashboard/></Guard>}/>
 
       <Route path="/student"           element={<Guard role="student"><StudentDashboard/></Guard>}/>
       <Route path="/student/profile"   element={<Guard role="student"><ProfilePage/></Guard>}/>
@@ -90,6 +98,9 @@ function AppRoutes() {
       <Route path="/student/placements" element={<Guard role="student"><PlacementsPage/></Guard>}/>
       <Route path="/student/helpdesk"   element={<Guard role="student"><HelpdeskPage/></Guard>}/>
       <Route path="/student/timetable"  element={<Guard role="student"><TimetablePage/></Guard>}/>
+      <Route path="/student/library"    element={<Guard role="student"><LibraryPage/></Guard>}/>
+      <Route path="/student/attendance" element={<Guard role="student"><AttendancePage/></Guard>}/>
+      <Route path="/student/notes"      element={<Guard role="student"><NotesPage/></Guard>}/>
 
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>

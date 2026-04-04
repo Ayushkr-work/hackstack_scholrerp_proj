@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import {
   LayoutDashboard, Users, FileText, Bell, Calendar,
   Briefcase, CreditCard, LogOut, User, ShieldCheck,
-  HeadphonesIcon, Sun, Moon, Menu, X, ChevronDown, Building2, CalendarDays
+  HeadphonesIcon, Sun, Moon, Menu, X, ChevronDown, CalendarDays, BookOpen, Rocket, ClipboardList
 } from 'lucide-react';
 
 const adminLinks = [
@@ -19,8 +19,12 @@ const adminLinks = [
   { to:'/admin/placements',   icon:Briefcase,       label:'Placements' },
   { to:'/admin/helpdesk',     icon:HeadphonesIcon,  label:'Helpdesk'   },
   { to:'/admin/timetable',    icon:CalendarDays,    label:'Timetable'  },
-  { to:'/admin/colleges',     icon:Building2,       label:'Colleges'   },
+  { to:'/admin/faculty',      icon:Users,           label:'Faculty'    },
+  { to:'/admin/library',      icon:BookOpen,        label:'Library'    },
   { to:'/admin/reset-logs',   icon:ShieldCheck,     label:'Resets'     },
+];
+const facultyLinks = [
+  { to:'/faculty',            icon:LayoutDashboard, label:'Dashboard'  },
 ];
 const studentLinks = [
   { to:'/student',             icon:LayoutDashboard, label:'Dashboard'  },
@@ -32,6 +36,9 @@ const studentLinks = [
   { to:'/student/placements',  icon:Briefcase,       label:'Placements' },
   { to:'/student/helpdesk',    icon:HeadphonesIcon,  label:'Helpdesk'   },
   { to:'/student/timetable',   icon:CalendarDays,    label:'Timetable'  },
+  { to:'/student/library',     icon:BookOpen,        label:'Library'    },
+  { to:'/student/attendance', icon:ClipboardList,  label:'Attendance' },
+  { to:'/student/notes',       icon:Rocket,          label:'Study'      },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -40,10 +47,12 @@ export default function DashboardLayout({ children }) {
   const navigate               = useNavigate();
   const [mobileOpen, setMobileOpen]   = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const links = role === 'admin' ? adminLinks : studentLinks;
+  const links = role === 'admin' ? adminLinks : role === 'faculty' ? facultyLinks : studentLinks;
 
   const avatarGrad = role === 'admin'
     ? 'linear-gradient(135deg,#D4AF37,#B8960C)'
+    : role === 'faculty'
+    ? 'linear-gradient(135deg,#818CF8,#6366F1)'
     : 'linear-gradient(135deg,#22C55E,#15803D)';
 
   return (
@@ -69,7 +78,7 @@ export default function DashboardLayout({ children }) {
 
         {/* ── LEFT: Logo ── */}
         <div className="flex items-center gap-3">
-          <NavLink to={role==='admin'?'/admin':'/student'}
+          <NavLink to={role==='admin'?'/admin':role==='faculty'?'/faculty':'/student'}
             className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center shrink-0"
               style={{ background:'linear-gradient(135deg,#22C55E,#15803D)', padding:'2px' }}>
@@ -92,7 +101,7 @@ export default function DashboardLayout({ children }) {
         {/* ── CENTER: Nav links (perfectly centered) ── */}
         <nav className="hidden lg:flex items-center gap-1">
           {links.map(({ to, icon:Icon, label }) => (
-            <NavLink key={to} to={to} end={to==='/admin'||to==='/student'}
+            <NavLink key={to} to={to} end={to==='/admin'||to==='/student'||to==='/faculty'}
               className={({ isActive }) => `nav-link ${isActive?'active':''}`}>
               <Icon size={13}/>{label}
             </NavLink>
@@ -241,7 +250,7 @@ export default function DashboardLayout({ children }) {
             }}>
             <div className="p-3 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {links.map(({ to, icon:Icon, label }) => (
-                <NavLink key={to} to={to} end={to==='/admin'||to==='/student'}
+                <NavLink key={to} to={to} end={to==='/admin'||to==='/student'||to==='/faculty'}
                   className={({ isActive }) => `nav-link ${isActive?'active':''}`}
                   onClick={() => setMobileOpen(false)}>
                   <Icon size={13}/>{label}
